@@ -22,6 +22,7 @@ The purpose of this repo is to document the System Prompt instructions for all t
 
 | What | Date | Link |
 |------|------|------|
+| **Kimi K3 (high-fidelity public reconstruction)** | July 20, 2026 | [Behavioral kernel](Kimi/kimi-k3-high-fidelity-reconstruction.md) · [Runtime adapters](Kimi/kimi-k3-runtime-adapters.md) · [Evaluation suite](Kimi/kimi-k3-evaluation-suite.md) |
 | **Claude Sonnet 5** | July 1, 2026 | [System prompt](Anthropic/claude-sonnet-5.md) |
 | **Claude Design (Opus 4.8 — full prompt + 48 tools + 16 skills + 9 starter sources)** | June 26, 2026 | [System prompt](Anthropic/claude-design.md) |
 | **GitHub Copilot for macOS (app)** | June 18, 2026 | [System prompt](Microsoft/copilot-macos-app.md) |
@@ -211,6 +212,12 @@ The purpose of this repo is to document the System Prompt instructions for all t
 | Product | Prompt |
 |---------|--------|
 | Qwen 3.6 Plus | [System prompt](Qwen/qwen-3.6-plus.md) |
+
+## Moonshot AI — Kimi
+
+| Model | Prompt |
+|-------|--------|
+| **Kimi K3 (high-fidelity public reconstruction)** | [**Behavioral kernel**](Kimi/kimi-k3-high-fidelity-reconstruction.md) · [Runtime adapters](Kimi/kimi-k3-runtime-adapters.md) · [Evaluation suite](Kimi/kimi-k3-evaluation-suite.md) · [Documentation](Kimi/README.md) |
 
 ## Misc
 
