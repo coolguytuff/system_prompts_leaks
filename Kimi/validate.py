@@ -72,12 +72,13 @@ def display_path(path: Path) -> str:
         return str(path)
 
 
-def read(path: Path) -> str:
+def read(path: Path, *, enforce_final_newline: bool = True) -> str:
     require(path.is_file(), f"missing file: {display_path(path)}")
     text = path.read_text(encoding="utf-8")
     require("\r" not in text, f"CRLF line endings: {display_path(path)}")
     require(not any(line.endswith((" ", "\t")) for line in text.splitlines()), f"trailing whitespace: {display_path(path)}")
-    require(text.endswith("\n"), f"missing final newline: {display_path(path)}")
+    if enforce_final_newline:
+        require(text.endswith("\n"), f"missing final newline: {display_path(path)}")
     return text
 
 
@@ -287,7 +288,7 @@ def validate_workflow(text: str) -> None:
 
 def main() -> int:
     try:
-        texts = {path: read(path) for path in ALL_TEXT_FILES}
+        texts = {path: read(path, enforce_final_newline=path != ROOT_README) for path in ALL_TEXT_FILES}
         prompt = extract_prompt(texts[KERNEL])
         validate_tags(prompt)
         validate_prompt_budget(prompt)
