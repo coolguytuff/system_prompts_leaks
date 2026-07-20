@@ -149,6 +149,10 @@ def validate_workflow(text: str) -> None:
     require('"Kimi/**"' in text, "workflow path filter does not cover Kimi files")
     require("pull_request:" in text and "push:" in text, "workflow must validate pull requests and pushes")
 
+    action_refs = dict(re.findall(r"^\s*uses:\s+([^@\s]+)@([0-9a-f]{40})(?:\s+#.*)?$", text, flags=re.MULTILINE))
+    for action in ("actions/checkout", "actions/setup-python"):
+        require(action in action_refs, f"workflow action is not pinned to an immutable SHA: {action}")
+
 
 def main() -> int:
     try:
