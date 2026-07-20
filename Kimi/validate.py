@@ -1,33 +1,59 @@
 #!/usr/bin/env python3
-"""Static validation for the Kimi K3 reconstruction package."""
+"""Deterministic static validation for the Kimi K3 reconstruction package."""
 
 from __future__ import annotations
 
 import re
 import sys
+from collections import Counter
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
 REPO_ROOT = ROOT.parent
-KERNEL = ROOT / "kimi-k3-high-fidelity-reconstruction-v5.1.md"
-ADAPTERS = ROOT / "kimi-k3-runtime-adapters-v5.1.md"
-EVALUATION = ROOT / "kimi-k3-evaluation-suite-v5.1.md"
+
+KERNEL = ROOT / "kimi-k3-high-fidelity-reconstruction-v6.0.md"
+ADAPTERS = ROOT / "kimi-k3-runtime-adapters-v6.0.md"
+EVALUATION = ROOT / "kimi-k3-evaluation-suite-v6.0.md"
+EVIDENCE = ROOT / "kimi-k3-evidence-v6.0.md"
+AUDIT = ROOT / "kimi-k3-v6.0-audit.md"
 README = ROOT / "README.md"
 SECURITY = ROOT / "SECURITY.md"
+
 KERNEL_POINTER = ROOT / "kimi-k3-high-fidelity-reconstruction.md"
 ADAPTER_POINTER = ROOT / "kimi-k3-runtime-adapters.md"
 EVALUATION_POINTER = ROOT / "kimi-k3-evaluation-suite.md"
+ROOT_README = REPO_ROOT / "README.md"
 WORKFLOW = REPO_ROOT / ".github" / "workflows" / "validate-kimi-reconstruction.yml"
 
-EXPECTED_VERSION = "5.1"
-EXPECTED_TEST_COUNT = 41
-CANONICAL_FILES = [KERNEL, ADAPTERS, EVALUATION, README, SECURITY]
+EXPECTED_VERSION = "6.0"
+EXPECTED_TEST_COUNT = 58
+MIN_PROMPT_LINES = 250
+MAX_PROMPT_LINES = 500
+MAX_PROMPT_WORDS = 5200
+
+CANONICAL_FILES = [KERNEL, ADAPTERS, EVALUATION, EVIDENCE, AUDIT, README, SECURITY]
 POINTERS = {
     KERNEL_POINTER: KERNEL.name,
     ADAPTER_POINTER: ADAPTERS.name,
     EVALUATION_POINTER: EVALUATION.name,
 }
-ALL_TEXT_FILES = [*CANONICAL_FILES, *POINTERS, WORKFLOW]
+ALL_TEXT_FILES = [*CANONICAL_FILES, *POINTERS, ROOT_README, WORKFLOW]
+
+REQUIRED_TAGS = {
+    "priority_and_provenance",
+    "operating_posture",
+    "task_router",
+    "scope_control",
+    "communication",
+    "reasoning_and_evidence",
+    "execution_loop",
+    "goal_contract",
+    "tools_and_permissions",
+    "state_and_compaction",
+    "task_modules",
+    "integrity",
+    "completion_gate",
+}
 
 
 class ValidationError(RuntimeError):
@@ -79,7 +105,7 @@ def validate_tags(prompt: str) -> None:
             continue
         name = match.group(1)
         if stripped.startswith("</"):
-            require(bool(stack), f"closing tag without opener at prompt line {number}")
+            require(stack, f"closing tag without opener at prompt line {number}")
             require(stack[-1] == name, f"tag mismatch at prompt line {number}: expected </{stack[-1]}>")
             stack.pop()
         else:
@@ -87,7 +113,30 @@ def validate_tags(prompt: str) -> None:
             seen.add(name)
             stack.append(name)
     require(not stack, f"unclosed section tags: {', '.join(stack)}")
-    require(len(seen) >= 8, "unexpectedly small section count")
+    missing = REQUIRED_TAGS - seen
+    require(not missing, f"missing required section tags: {', '.join(sorted(missing))}")
+    require(seen == REQUIRED_TAGS, f"unexpected section tag set: {', '.join(sorted(seen - REQUIRED_TAGS))}")
+
+
+def validate_prompt_budget(prompt: str) -> None:
+    lines = len(prompt.splitlines())
+    words = len(re.findall(r"\S+", prompt))
+    require(MIN_PROMPT_LINES <= lines <= MAX_PROMPT_LINES, f"prompt line count {lines} outside {MIN_PROMPT_LINES}..{MAX_PROMPT_LINES}")
+    require(words <= MAX_PROMPT_WORDS, f"prompt word count {words} exceeds {MAX_PROMPT_WORDS}")
+
+    normalized: list[str] = []
+    in_fence = False
+    for line in prompt.splitlines():
+        stripped = line.strip()
+        if stripped.startswith("```"):
+            in_fence = not in_fence
+            continue
+        if in_fence or len(stripped) < 70 or stripped.startswith(("#", "<", "- **")):
+            continue
+        value = re.sub(r"\s+", " ", stripped).lower()
+        normalized.append(value)
+    duplicates = [line for line, count in Counter(normalized).items() if count > 1]
+    require(not duplicates, f"duplicated long directives dilute priority: {duplicates[:3]}")
 
 
 def validate_transport_separation(prompt: str) -> None:
@@ -98,8 +147,9 @@ def validate_transport_separation(prompt: str) -> None:
         "api.moonshot.ai": "endpoints belong in runtime adapters",
         "/fibers": "Formula transport belongs in runtime adapters",
         "ANTHROPIC_BASE_URL": "client variables belong in runtime adapters",
-        "partial=true": "partial transport belongs in runtime adapters",
+        "partial=true": "Partial transport belongs in runtime adapters",
         "reasoning_content": "reasoning-field transport belongs in runtime adapters",
+        "prompt_cache_key": "cache fields belong in runtime adapters",
     }
     lowered = prompt.lower()
     for needle, reason in forbidden.items():
@@ -115,23 +165,83 @@ def validate_versions(texts: dict[Path, str]) -> None:
         )
 
 
+def validate_runtime_adapter(text: str) -> None:
+    required = {
+        'tool_choice="required"': "K3-specific Tool Choice resolution",
+        "prompt_cache_key": "agent cache-key guidance",
+        "partial=true": "Partial Mode transport",
+        "json_object": "Partial/JSON incompatibility",
+        "128": "tool-array limit",
+        "Retry-After": "rate-limit handling",
+        "full jitter": "bounded retry strategy",
+        "tool_call_id": "tool transaction identity",
+        "interrupted": "interrupted-call closure",
+        "loopback": "SSRF defense",
+        "cloud-metadata": "metadata endpoint defense",
+        "4096×2160": "image resolution guidance",
+        "1920×1080": "video resolution guidance",
+        "100 MB": "media/request limit",
+        "fail open": "hook semantics",
+        "Queued goals": "goal queue isolation",
+        "permission mode is live state": "subagent permission propagation",
+    }
+    lowered = text.lower()
+    for needle, reason in required.items():
+        require(needle.lower() in lowered, f"runtime adapter missing {reason}: {needle}")
+
+
 def validate_evaluation(text: str) -> None:
     tests = [int(value) for value in re.findall(r"^###\s+(\d+)\.", text, flags=re.MULTILINE)]
-    require(tests == list(range(1, EXPECTED_TEST_COUNT + 1)), "evaluation tests must be contiguous 1..41")
+    require(tests == list(range(1, EXPECTED_TEST_COUNT + 1)), f"evaluation tests must be contiguous 1..{EXPECTED_TEST_COUNT}")
     require("Automatic rejection failures" in text, "automatic rejection criteria missing")
     for title in (
-        "Denial non-circumvention",
-        "User versus skill priority",
-        "Authenticated-control provenance",
-        "Partial-mode continuation",
-        "Permission-mode semantics",
-        "Background-task lifecycle and privacy",
+        "Scope-creep resistance",
+        "Unknown side-effect reconciliation",
+        "Goal proof conditions",
+        "Queued-goal isolation",
+        "Partial Mode versus JSON Mode",
+        "Live permission-mode propagation",
+        "Hook fail-open boundary",
+        "Model-specific `tool_choice`",
+        "Automatic cache versus `prompt_cache_key`",
+        "SSRF and redirect defense",
+        "Background-task lifecycle and session privacy",
     ):
         require(title in text, f"missing critical regression test: {title}")
 
 
+def validate_evidence(text: str) -> None:
+    for term in (
+        "Kimi K3 API quickstart",
+        "Kimi Code goals guide",
+        "Kimi Code hooks guide",
+        "tool_choice=\"required\"",
+        "prompt_cache_key",
+        "Conflict-resolution policy",
+        "RECONSTRUCTED",
+        "UNREPRODUCIBLE",
+    ):
+        require(term in text, f"evidence matrix missing: {term}")
+    require("model-specific docs win for k3" in text.lower(), "evidence matrix does not resolve Tool Choice conflict")
+
+
+def validate_security(text: str) -> None:
+    for heading in (
+        "Control-channel spoofing",
+        "Excessive proactivity and scope drift",
+        "Ambiguous or duplicated side effects",
+        "Hook fail-open behavior",
+        "SSRF and unsafe URL retrieval",
+        "Cache-key correlation and data leakage",
+        "Goal runaway and budget exhaustion",
+        "Subagent permission drift",
+        "Supply-chain and CI drift",
+    ):
+        require(heading in text, f"security model missing threat: {heading}")
+
+
 def validate_readme(text: str) -> None:
-    for filename in (KERNEL.name, ADAPTERS.name, EVALUATION.name, SECURITY.name, Path(__file__).name):
+    for filename in (KERNEL.name, ADAPTERS.name, EVALUATION.name, EVIDENCE.name, AUDIT.name, SECURITY.name, Path(__file__).name):
         require(filename in text, f"README does not mention {filename}")
     require(f"{EXPECTED_TEST_COUNT}-test" in text, "README test count is stale")
 
@@ -143,13 +253,32 @@ def validate_pointers(texts: dict[Path, str]) -> None:
         require("compatibility entry point" in text.lower(), f"compatibility purpose is unclear: {pointer.name}")
 
 
+def validate_relative_links(texts: dict[Path, str]) -> None:
+    pattern = re.compile(r"\[[^\]]+\]\(([^)]+)\)")
+    for path in [*CANONICAL_FILES, *POINTERS]:
+        for target in pattern.findall(texts[path]):
+            if "://" in target or target.startswith(("#", "mailto:")):
+                continue
+            clean = target.split("#", 1)[0]
+            if not clean:
+                continue
+            resolved = (path.parent / clean).resolve()
+            require(resolved.is_file(), f"broken relative link in {path.name}: {target}")
+
+
+def validate_root_readme(text: str) -> None:
+    for target in POINTERS:
+        require(f"Kimi/{target.name}" in text, f"root README missing Kimi entry: {target.name}")
+
+
 def validate_workflow(text: str) -> None:
     require("permissions:\n  contents: read" in text, "workflow must keep least-privilege contents: read")
-    require("python Kimi/validate.py" in text, "workflow does not run the package validator")
-    require('"Kimi/**"' in text, "workflow path filter does not cover Kimi files")
+    require("python -m py_compile Kimi/validate.py" in text, "workflow does not compile validator")
+    require("python Kimi/validate.py" in text, "workflow does not run validator")
+    require('"Kimi/**"' in text and '"README.md"' in text, "workflow path filters are incomplete")
     require("pull_request:" in text and "push:" in text, "workflow must validate pull requests and pushes")
-    require("timeout-minutes:" in text, "workflow must bound execution time")
     require("persist-credentials: false" in text, "checkout credentials must not persist")
+    require("timeout-minutes:" in text, "workflow job must have a timeout")
 
     action_refs = dict(re.findall(r"^\s*uses:\s+([^@\s]+)@([0-9a-f]{40})(?:\s+#.*)?$", text, flags=re.MULTILINE))
     for action in ("actions/checkout", "actions/setup-python"):
@@ -161,20 +290,28 @@ def main() -> int:
         texts = {path: read(path) for path in ALL_TEXT_FILES}
         prompt = extract_prompt(texts[KERNEL])
         validate_tags(prompt)
+        validate_prompt_budget(prompt)
         validate_transport_separation(prompt)
         validate_versions(texts)
+        validate_runtime_adapter(texts[ADAPTERS])
         validate_evaluation(texts[EVALUATION])
+        validate_evidence(texts[EVIDENCE])
+        validate_security(texts[SECURITY])
         validate_readme(texts[README])
         validate_pointers(texts)
+        validate_relative_links(texts)
+        validate_root_readme(texts[ROOT_README])
         validate_workflow(texts[WORKFLOW])
     except (OSError, UnicodeError, ValidationError) as exc:
         print(f"FAIL: {exc}", file=sys.stderr)
         return 1
 
+    prompt_lines = len(prompt.splitlines())
+    prompt_words = len(re.findall(r"\S+", prompt))
     print(
         "PASS: Kimi reconstruction validated "
-        f"(version {EXPECTED_VERSION}, {EXPECTED_TEST_COUNT} tests, {len(prompt.splitlines())} prompt lines, "
-        f"{len(ALL_TEXT_FILES)} files checked)"
+        f"(version {EXPECTED_VERSION}, {EXPECTED_TEST_COUNT} tests, {prompt_lines} prompt lines, "
+        f"{prompt_words} prompt words, {len(ALL_TEXT_FILES)} files checked)"
     )
     return 0
 
