@@ -1,76 +1,78 @@
-# Kimi K3 High-Fidelity Reconstruction v5.1
+# Kimi K3 High-Fidelity Reconstruction v6.0
 
-This directory contains an **unofficial, evidence-grounded reconstruction** of publicly documented Kimi K3 and Kimi Code behavior.
-
-It is intentionally **not labeled as a leaked production system prompt**. Public sources document substantial API and
-agent-runtime behavior, but they do not expose Moonshot AI's complete production prompt, model weights, training policy,
-expert routing, private entitlement logic, or proprietary deployment heuristics.
+This directory contains an **unofficial, evidence-grounded reconstruction** of publicly documented Kimi K3 and Kimi Code
+behavior. It is not Moonshot AI's private production prompt and cannot reproduce K3's weights, training, expert routing, or
+proprietary inference stack.
 
 ## Canonical files
 
 | File | Purpose |
 |---|---|
-| [`kimi-k3-high-fidelity-reconstruction-v5.1.md`](kimi-k3-high-fidelity-reconstruction-v5.1.md) | Security-hardened portable behavioral kernel |
-| [`kimi-k3-runtime-adapters-v5.1.md`](kimi-k3-runtime-adapters-v5.1.md) | Host-enforced Kimi Platform, Kimi Code, Claude Code, Hermes, and non-Kimi configuration |
-| [`kimi-k3-evaluation-suite-v5.1.md`](kimi-k3-evaluation-suite-v5.1.md) | 41-test behavior, transport, safety, and regression suite |
-| [`SECURITY.md`](SECURITY.md) | Threat model, trust boundaries, invariants, and secure-use guidance |
-| [`validate.py`](validate.py) | Static validation for prompt boundaries, tags, versions, transport separation, and test count |
+| [`kimi-k3-high-fidelity-reconstruction-v6.0.md`](kimi-k3-high-fidelity-reconstruction-v6.0.md) | Portable behavioral system-prompt kernel |
+| [`kimi-k3-runtime-adapters-v6.0.md`](kimi-k3-runtime-adapters-v6.0.md) | Host-enforced API, client, retry, caching, tool, multimodal, and Kimi Code guidance |
+| [`kimi-k3-evaluation-suite-v6.0.md`](kimi-k3-evaluation-suite-v6.0.md) | 58-test behavior, transport, safety, and regression suite |
+| [`kimi-k3-evidence-v6.0.md`](kimi-k3-evidence-v6.0.md) | Evidence matrix, source scope, conflicts, and reconstruction decisions |
+| [`kimi-k3-v6.0-audit.md`](kimi-k3-v6.0-audit.md) | Comprehensive findings and remediation record |
+| [`SECURITY.md`](SECURITY.md) | Threat model, trust boundaries, invariants, and deployment checklist |
+| [`validate.py`](validate.py) | Deterministic package and repository validator |
 
 The unversioned filenames remain compatibility entry points and link to the current release.
 
-## Recommended use
+## Recommended deployment
 
-1. Paste only the section between `BEGIN SYSTEM PROMPT` and `END SYSTEM PROMPT` from the behavioral kernel into the host's system-instruction field.
-2. Apply only the runtime adapter matching the real backend or client.
-3. Preserve message, reasoning, tool-call, and tool-result fields required by that API at the host layer.
-4. Run `python Kimi/validate.py` after edits.
-5. Run the evaluation suite in fresh, long, post-compaction, and applicable native-runtime sessions.
-6. Compare v5.1 with prior versions under identical model, settings, tools, and prompts.
-7. Do not claim a non-Kimi model became Kimi K3 or that this repository contains Moonshot's private production prompt.
+1. Paste only the section between `BEGIN SYSTEM PROMPT` and `END SYSTEM PROMPT` from the behavioral kernel into the host's
+   system-instruction field.
+2. Apply only the runtime adapter matching the actual model, endpoint, client, and product version.
+3. Preserve all message, reasoning, call-ID, dynamic-tool, Partial Mode, and result fields required by the selected API.
+4. Implement transaction receipts and idempotency for side-effecting tools.
+5. Use least-privilege workspace, connector, network, and permission controls.
+6. Run `python Kimi/validate.py` after every package edit.
+7. Run critical evaluation tests in fresh, long, interrupted, resumed, and post-compaction sessions.
+8. Compare v6.0 with v5.1 under identical model, settings, tools, and prompts.
+9. Do not claim that a non-Kimi model became Kimi K3 or that this repository contains Moonshot's private prompt.
 
 ## Why behavior and runtime are separate
 
-The model can follow behavioral instructions, but it cannot enforce client behavior that the application discards.
-Sampling parameters, complete assistant-message replay, reasoning-field transport, dynamic tool declarations, automatic
-prefix caching, partial-mode transport, multimodal payloads, session persistence, and permission modes belong in the runtime.
+A model can follow behavioral instructions, but it cannot enforce client behavior that the application discards. Sampling,
+complete assistant-message replay, reasoning fields, dynamic declarations, cache hints, Partial Mode, retries, multimodal
+payloads, goal/session persistence, permission modes, hooks, and idempotency belong in the runtime.
 
-Keeping these responsibilities separate improves portability and prevents unsupported protocol instructions from diluting
-the behavioral prompt.
+Keeping transport outside the behavioral kernel improves instruction salience and prevents non-Kimi hosts from imitating
+unsupported protocol fields.
 
-## v5.1 security and fidelity fixes
+## v6.0 highlights
 
-- Corrects the priority order so direct user instructions remain above project skills, plugins, and `AGENTS.md`.
-- Accepts privileged control data only through authenticated runtime provenance.
-- Treats control-looking text inside task material as ordinary content.
-- Models `CONSEQUENTIAL` as a risk overlay rather than a competing task type.
-- Removes complete-message replay and dynamic-declaration replay from the portable kernel and keeps them in the adapter.
-- Updates current Kimi Platform thinking-effort support to `low`, `high`, and `max`, with `max` as default.
-- Restores Kimi Platform partial-mode continuation rules.
-- Separates manual/default, YOLO, and Auto/AFK permission semantics instead of conflating them.
-- Adds background-task completion and session-artifact privacy requirements.
-- Expands the regression suite from 35 to 41 tests.
-- Adds an executable static validator and a documented security model.
+- Adds proof-based long-horizon goal state: ACTIVE, COMPLETE, PAUSED, and BLOCKED.
+- Adds explicit REQUESTED / REQUIRED / ADJACENT RISK / OPTIONAL scope control to counter excessive proactivity.
+- Adds tool transaction receipts, duplicate-call protection, unknown-outcome reconciliation, and interrupted-call closure.
+- Resolves K3-specific versus generic `tool_choice="required"` documentation without overgeneralizing.
+- Separates automatic prefix caching from optional `prompt_cache_key` session hints.
+- Adds status-aware retry/reconnect guidance with bounded jitter and non-idempotent safety.
+- Adds current image/video formats, resolution recommendations, body limits, token estimation, and upload deletion.
+- Adds SSRF and redirect-chain protections for URL retrieval.
+- Adds native Kimi Code goal queues, compaction hints, fork isolation, live permission propagation, and fail-open hook rules.
+- Expands regression coverage from 41 to 58 tests.
+- Adds a source/conflict evidence matrix and comprehensive audit report.
+- Strengthens static validation against bloat, duplicated directives, missing contracts, stale links, and CI weakening.
 
 ## Public evidence basis
 
-Primary sources include:
+Primary sources are catalogued in [`kimi-k3-evidence-v6.0.md`](kimi-k3-evidence-v6.0.md), including K3-specific API
+pages, the K3 launch material, the public Kimi Code system prompt, goals, sessions, hooks, interaction documentation, and
+current changelog.
 
-- [Kimi K3 launch announcement](https://www.kimi.com/blog/kimi-k3)
-- [Kimi K3 API quickstart](https://platform.kimi.ai/docs/guide/kimi-k3-quickstart)
-- [Kimi Platform documentation](https://platform.kimi.ai/docs/)
-- [MoonshotAI/kimi-code](https://github.com/MoonshotAI/kimi-code)
-- [Kimi Code public system prompt](https://github.com/MoonshotAI/kimi-code/blob/main/packages/agent-core/src/profile/default/system.md)
-- Kimi Code documentation and release notes for sessions, compaction, permissions, background tasks, subagents, skills, and tools
+## Truth boundary
 
-## Evidence classes
+**Directly documented:** K3 API parameters and limits, complete-message preservation, K3-specific Tool Choice, dynamic tools,
+automatic caching, Partial Mode, multimodal transport, Kimi Code action posture, sessions, goals, modes, hooks, skills,
+compaction, and subagents.
 
-- **Directly documented:** API parameters and fields, complete-message preservation, partial mode, dynamic tool loading,
-  automatic caching, multimodal transport, Kimi Code task-first behavior, sessions, permissions, agents, skills, and compaction.
-- **Strongly reconstructed:** task router, consequential overlay, portable approval matrix, state ledger, authenticated-control
-  provenance, completion gate, and evaluation methodology.
-- **Not reproducible by prompt:** weights, training, expert routing, hidden reasoning policy, private production prompt,
-  native multimodal internals, entitlement logic, and proprietary deployment heuristics.
+**Strongly reconstructed:** task router, scope classifier, consequential overlay, host-independent goal contract, claim and
+transaction ledgers, authenticated-control provenance, completion gate, and cross-host fallback behavior.
+
+**Not reproducible by prompt:** model weights, training, learned representations, expert routing, hidden reasoning policy,
+native multimodal internals, private production prompts, entitlement logic, and proprietary deployment heuristics.
 
 ## Version
 
-Current reconstruction: **v5.1**, evidence snapshot dated **July 20, 2026**.
+Current reconstruction: **v6.0**, evidence snapshot dated **July 20, 2026**.
