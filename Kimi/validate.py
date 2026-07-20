@@ -216,6 +216,7 @@ def validate_evidence(text: str) -> None:
         "Kimi K3 API quickstart",
         "Kimi Code goals guide",
         "Kimi Code hooks guide",
+        "c2d7bebd04106473bb4dbab2903756aa3f14a880",
         "tool_choice=\"required\"",
         "prompt_cache_key",
         "Conflict-resolution policy",
