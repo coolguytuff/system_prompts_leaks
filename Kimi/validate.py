@@ -148,6 +148,8 @@ def validate_workflow(text: str) -> None:
     require("python Kimi/validate.py" in text, "workflow does not run the package validator")
     require('"Kimi/**"' in text, "workflow path filter does not cover Kimi files")
     require("pull_request:" in text and "push:" in text, "workflow must validate pull requests and pushes")
+    require("timeout-minutes:" in text, "workflow must bound execution time")
+    require("persist-credentials: false" in text, "checkout credentials must not persist")
 
     action_refs = dict(re.findall(r"^\s*uses:\s+([^@\s]+)@([0-9a-f]{40})(?:\s+#.*)?$", text, flags=re.MULTILINE))
     for action in ("actions/checkout", "actions/setup-python"):
