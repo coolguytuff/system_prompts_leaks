@@ -1,0 +1,29 @@
+name: Validate Kimi reconstruction
+
+on:
+  pull_request:
+    paths:
+      - "Kimi/**"
+      - ".github/workflows/validate-kimi-reconstruction.yml"
+  push:
+    paths:
+      - "Kimi/**"
+      - ".github/workflows/validate-kimi-reconstruction.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Validate Kimi reconstruction
+        run: python Kimi/validate.py
