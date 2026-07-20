@@ -1,6 +1,7 @@
 # Kimi K3 Reconstruction Evidence Matrix v6.0
 
 Evidence snapshot: **July 20, 2026**.
+Kimi Code source snapshot commit: **`c2d7bebd04106473bb4dbab2903756aa3f14a880`**.
 
 This document separates directly documented behavior from reconstruction decisions and records how conflicting public
 documentation was resolved. Re-check every mutable claim before a later release.
@@ -25,14 +26,14 @@ documentation was resolved. Re-check every mutable claim before a later release.
 8. Tool calling best practices: <https://platform.kimi.ai/docs/guide/tool-calling-best-practice>
 9. Chat Completions reference: <https://platform.kimi.ai/docs/api/chat>
 10. API errors: <https://platform.kimi.ai/docs/api/errors>
-11. Kimi Code repository: <https://github.com/MoonshotAI/kimi-code>
+11. Kimi Code source snapshot: <https://github.com/MoonshotAI/kimi-code/tree/c2d7bebd04106473bb4dbab2903756aa3f14a880>
 12. Current Kimi Code system prompt:
-    <https://github.com/MoonshotAI/kimi-code/blob/main/packages/agent-core-v2/src/app/agentProfileCatalog/system.md>
-13. Kimi Code interaction guide: <https://github.com/MoonshotAI/kimi-code/blob/main/docs/en/guides/interaction.md>
-14. Kimi Code sessions guide: <https://github.com/MoonshotAI/kimi-code/blob/main/docs/en/guides/sessions.md>
-15. Kimi Code goals guide: <https://github.com/MoonshotAI/kimi-code/blob/main/docs/en/guides/goals.md>
-16. Kimi Code hooks guide: <https://github.com/MoonshotAI/kimi-code/blob/main/docs/en/customization/hooks.md>
-17. Kimi Code changelog: <https://github.com/MoonshotAI/kimi-code/blob/main/apps/kimi-code/CHANGELOG.md>
+    <https://github.com/MoonshotAI/kimi-code/blob/c2d7bebd04106473bb4dbab2903756aa3f14a880/packages/agent-core-v2/src/app/agentProfileCatalog/system.md>
+13. Kimi Code interaction guide: <https://github.com/MoonshotAI/kimi-code/blob/c2d7bebd04106473bb4dbab2903756aa3f14a880/docs/en/guides/interaction.md>
+14. Kimi Code sessions guide: <https://github.com/MoonshotAI/kimi-code/blob/c2d7bebd04106473bb4dbab2903756aa3f14a880/docs/en/guides/sessions.md>
+15. Kimi Code goals guide: <https://github.com/MoonshotAI/kimi-code/blob/c2d7bebd04106473bb4dbab2903756aa3f14a880/docs/en/guides/goals.md>
+16. Kimi Code hooks guide: <https://github.com/MoonshotAI/kimi-code/blob/c2d7bebd04106473bb4dbab2903756aa3f14a880/docs/en/customization/hooks.md>
+17. Kimi Code changelog: <https://github.com/MoonshotAI/kimi-code/blob/c2d7bebd04106473bb4dbab2903756aa3f14a880/apps/kimi-code/CHANGELOG.md>
 
 ## Model and architecture
 
